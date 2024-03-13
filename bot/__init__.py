@@ -82,9 +82,14 @@ async def on_user_kick(event):
         await client.edit_permissions(chat_id, kick_username, view_messages=False, send_messages=False)
 
 
-try:
-    client.start(bot_token=config.get('TELEGRAM_BOT_TOKEN'))
-    client.run_until_disconnected()
-finally:
-    client.disconnect()
-    print('Bot stopped')
+def main() -> None:
+    try:
+        client.start(bot_token=config.get('TELEGRAM_BOT_TOKEN'))
+        client.run_until_disconnected()
+    finally:
+        client.disconnect()
+        print('Bot stopped')
+
+
+if __name__ == '__main__':
+    main()

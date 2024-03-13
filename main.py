@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-
 from fastapi import FastAPI, Request
 
 app = FastAPI()
