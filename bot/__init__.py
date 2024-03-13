@@ -1,13 +1,8 @@
-from dotenv import dotenv_values
-from telethon import TelegramClient, events, Button
+from telethon.sync import TelegramClient, events, Button
 from telethon.tl.types import PeerUser, PeerChat, PeerChannel
 
-config = dotenv_values(".env")
 
-api_id = int(config.get('TELEGRAM_APP_ID'))
-api_hash = config.get('TELEGRAM_API_HASH')
 
-client = TelegramClient('bot', api_id, api_hash)
 
 
 @client.on(events.CallbackQuery)
@@ -39,11 +34,6 @@ async def on_new_message(event):
     print(f"Received a message from {sender.username}: {message}")
 
     await client.send_message(chat_id, 'Welcome to the bot! How can I assist you?')
-    menu_keyboard = [
-        [Button.inline("Option 1", b"1"), Button.inline("Option 2", b"2")],
-        [Button.inline("Option 3", b"3"), Button.inline("Option 4", b"4")],
-    ]
-    await event.reply("Choose an option:", buttons=menu_keyboard)
 
 
 @client.on(events.NewMessage(pattern='/leave'))
@@ -82,14 +72,3 @@ async def on_user_kick(event):
         await client.edit_permissions(chat_id, kick_username, view_messages=False, send_messages=False)
 
 
-def main() -> None:
-    try:
-        client.start(bot_token=config.get('TELEGRAM_BOT_TOKEN'))
-        client.run_until_disconnected()
-    finally:
-        client.disconnect()
-        print('Bot stopped')
-
-
-if __name__ == '__main__':
-    main()

@@ -1,6 +1,13 @@
-import hashlib
-import hmac
-from fastapi import FastAPI, Request
+import uvicorn
+from dotenv import dotenv_values
+from fastapi import FastAPI
+from telethon import events
+from telethon import TelegramClient
+
+config = dotenv_values(".env")
+api_id = int(config.get('TELEGRAM_APP_ID'))
+api_hash = config.get('TELEGRAM_API_HASH')
+client = TelegramClient('bot', api_id, api_hash, use_ipv6=False)
 
 app = FastAPI()
 
@@ -8,34 +15,28 @@ app = FastAPI()
 @app.get("/up")
 async def read_root():
     return {
-        "message": "Service is healthy",
+        "message": "Service is healthy!",
     }
 
 
-# WEBHOOK_SECRET = "lin_wh_39JXATaYOqEsGJlPOyiw121RUgPsFaINmcwdGFCa8pqV"
+@client.on(events.NewMessage(pattern='/start'))
+async def on_new_message(event):
+    sender = await event.get_sender()
+    message = event.message.message
+    chat_id = event.message.peer_id
 
-WEBHOOK_SECRET = "lin_wh_g14SfvkEZOnkwQJSIE4o5SNOSK4QntPyENSg66nXjkOM"
+    print(f"Received a message from {sender.username}: {message}")
+
+    await client.send_message(chat_id, 'Welcome to the bot! How can I assist you?')
 
 
-@app.post("/webhook")
-async def webhook_handler(request: Request):
-    rawBody = await request.body()
-    rawBody = rawBody.decode('utf-8')
-    body = await request.json()
+if __name__ == '__main__':
+    try:
+        client.start(bot_token=config.get('TELEGRAM_BOT_TOKEN'))
+        uvicorn.run(app='main:app')
+        client.run_until_disconnected()
+    finally:
+        client.disconnect()
+        print('Bot stopped')
 
-    digest = hmac.new(
-        bytes(WEBHOOK_SECRET, 'UTF-8'),
-        msg=bytes(rawBody, 'UTF-8'),
-        digestmod=hashlib.sha256)
 
-    signature = digest.hexdigest()
-
-    if signature != request.headers.get('linear-signature'):
-        return {
-            "message": "Invalid signature"
-        }
-
-    return {
-        "message": "Webhook received",
-        "data": body,
-    }
